@@ -27,7 +27,7 @@ VMs = {
 
 
 for instance in instances:
-    VMs[instance.name] = {'Status': instance.status}
+    VMs[instance.name] = {'Status': instance.status, 'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p}
 
 class VM(Resource):
     
