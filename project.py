@@ -15,11 +15,24 @@ instances_list = list(compute_client.list(project=project_id, zone=zone))
 ##########################################################################
 
 
-from flask import Flask
-from flask_restful import Resource, Api 
+from flask import Flask, jsonify
+from flask_restful import Resource, Api
+from flask_cors import CORS 
+from flask_httpauth import HTTPBasicAuth
 
 app = Flask("GCPInstancesAPI")
 api = Api(app)
+CORS(app)
+auth = HTTPBasicAuth()
+
+# Define your username and password
+USERNAME = "admin"
+PASSWORD = "password123"
+
+# Basic authentication callback
+@auth.verify_password
+def verify_password(username, password):
+    return username == USERNAME and password == PASSWORD
 
 
 VMs = {
@@ -31,10 +44,12 @@ for instance in instances:
 
 class VM(Resource):
     
+    method_decorators = [auth.login_required]
+    
     def get(self, instance_name=None):
         if instance_name is None:
-            return VMs
-        return VMs[instance_name]
+            return jsonify(VMs)
+        return jsonify(VMs[instance_name])
     
 api.add_resource(VM, '/', '/<string:instance_name>')
 
