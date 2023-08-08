@@ -19,20 +19,22 @@ from flask import Flask, jsonify
 from flask_restful import Resource, Api
 from flask_cors import CORS 
 from flask_httpauth import HTTPBasicAuth
+import bcrypt
 
 app = Flask("GCPInstancesAPI")
 api = Api(app)
 CORS(app)
 auth = HTTPBasicAuth()
 
+
 # Define your username and password
 USERNAME = "admin"
-PASSWORD = "password123"
+PASSWORD = "$2b$12$lyR1usJNQWDo6ciYe/NBoO8co2urbyK4OHK7jhlVNqRPyCM9v5cyW"
 
-# Basic authentication callback
+# Basic authenticati aon callback
 @auth.verify_password
 def verify_password(username, password):
-    return username == USERNAME and password == PASSWORD
+    return username == USERNAME and bcrypt.checkpw(password.encode('utf-8'), PASSWORD.encode('utf-8'))
 
 
 VMs = {
@@ -40,7 +42,10 @@ VMs = {
 
 
 for instance in instances:
-    VMs[instance.name] = {'Status': instance.status, 'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p}
+    VMs[instance.name] = {
+        'Status': instance.status,
+        'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p
+        }
 
 class VM(Resource):
     
