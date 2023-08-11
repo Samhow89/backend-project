@@ -1,19 +1,4 @@
-##########################################################################
 from google.cloud import compute_v1
-# Create a Compute Engine client
-compute_client = compute_v1.InstancesClient()
-
-# Project ID of your GCP project
-project_id = 'project-389915'
-
-# Zone where the instances are running, e.g., 'europe-west2-c'
-zone = 'europe-west2-c'
-
-# Call the API to list instances in the specified zone 
-instances = compute_client.list(project=project_id, zone=zone)
-##########################################################################
-
-
 from flask import Flask, jsonify
 from flask_restful import Resource, Api
 from flask_cors import CORS 
@@ -24,24 +9,34 @@ from google.cloud import monitoring_v3
 from datetime import datetime
 
 
-app = Flask("GCPInstancesAPI")
-api = Api(app)
-CORS(app)
-auth = HTTPBasicAuth()
 
+project_id = 'project-389915'
+zone = 'europe-west2-c'
 
 
 USERNAME = "admin"
 PASSWORD = "$2b$12$lyR1usJNQWDo6ciYe/NBoO8co2urbyK4OHK7jhlVNqRPyCM9v5cyW"
 
 
+compute_client = compute_v1.InstancesClient()
+instances = compute_client.list(project=project_id, zone=zone)
+disks_client = compute_v1.DisksClient()
+
+
+VMs = {}
+
+
+app = Flask("GCPInstancesAPI")
+api = Api(app)
+CORS(app)
+auth = HTTPBasicAuth()
+
+
 @auth.verify_password
 def verify_password(username, password):
     return username == USERNAME and bcrypt.checkpw(password.encode('utf-8'), PASSWORD.encode('utf-8'))
 
-
-
-
+#I did not write this function myself
 def cpu_utilization(project_id, zone, instance_id):
     client = monitoring_v3.MetricServiceClient()
     metric_type = "compute.googleapis.com/instance/cpu/utilization"
@@ -58,18 +53,26 @@ def cpu_utilization(project_id, zone, instance_id):
         return(f"{utilization:.2f}%") 
 
 
-
-VMs = {
-}
+def get_disk_size(instance_name):
+    for instance in instances:
+        if instance.name == instance_name:
+            for disk in instance.disks:
+                disk_info = disks_client.get(project=project_id, zone=zone, disk=disk.source.split('/')[-1])
+                return f"{disk_info.size_gb} GB"
+    return "N/A"
 
 
 
 for instance in instances:
     VMs[instance.name] = {
-        'Status': instance.status,
-        'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p,
         'Instance ID': instance.id,
-        'CPU Utilization': cpu_utilization(project_id, zone, instance.id)
+        'CPU utilization': cpu_utilization(project_id, zone, instance.id),
+        'Creation date': instance.creation_timestamp[:10],
+        'Disk size': get_disk_size(instance.name),
+        'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p,
+        'Status': instance.status
+        
+
         }
 
 class VM(Resource):
