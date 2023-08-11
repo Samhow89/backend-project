@@ -13,8 +13,9 @@ from datetime import datetime
 project_id = 'project-389915'
 zone = 'europe-west2-c'
 
-
+#Login details to access the api
 USERNAME = "admin"
+# Hashed password for "password123"
 PASSWORD = "$2b$12$lyR1usJNQWDo6ciYe/NBoO8co2urbyK4OHK7jhlVNqRPyCM9v5cyW"
 
 
@@ -34,7 +35,7 @@ auth = HTTPBasicAuth()
 def verify_password(username, password):
     return username == USERNAME and bcrypt.checkpw(password.encode('utf-8'), PASSWORD.encode('utf-8'))
 
-#I did not write this function myself
+# I did not write this function myself
 def cpu_utilization(project_id, zone, instance_id):
     client = monitoring_v3.MetricServiceClient()
     metric_type = "compute.googleapis.com/instance/cpu/utilization"
