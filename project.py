@@ -59,11 +59,9 @@ for instance in instances:
         'Creation date': instance.creation_timestamp[:10],
         'Disk size': f"{instance.disks[0].disk_size_gb}GB",
         'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p,
-        'Status': instance.status   
-
+        'Status': instance.status,
+        'OS': instance.disks[0].licenses[0].split('/')[-1]
         }
-    #print (instance.disks[0].disk_size_gb)
-    #print("#################################################")
 
 class VM(Resource):
     
