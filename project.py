@@ -20,8 +20,6 @@ PASSWORD = "$2b$12$lyR1usJNQWDo6ciYe/NBoO8co2urbyK4OHK7jhlVNqRPyCM9v5cyW"
 
 compute_client = compute_v1.InstancesClient()
 instances = compute_client.list(project=project_id, zone=zone)
-disks_client = compute_v1.DisksClient()
-
 
 VMs = {}
 
@@ -53,27 +51,19 @@ def cpu_utilization(project_id, zone, instance_id):
         return(f"{utilization:.2f}%") 
 
 
-def get_disk_size(instance_name):
-    for instance in instances:
-        if instance.name == instance_name:
-            for disk in instance.disks:
-                disk_info = disks_client.get(project=project_id, zone=zone, disk=disk.source.split('/')[-1])
-                return f"{disk_info.size_gb} GB"
-    return "N/A"
-
-
 
 for instance in instances:
     VMs[instance.name] = {
         'Instance ID': instance.id,
         'CPU utilization': cpu_utilization(project_id, zone, instance.id),
         'Creation date': instance.creation_timestamp[:10],
-        'Disk size': get_disk_size(instance.name),
+        'Disk size': f"{instance.disks[0].disk_size_gb}GB",
         'External IP': instance.network_interfaces[0].access_configs[0].nat_i_p,
-        'Status': instance.status
-        
+        'Status': instance.status   
 
         }
+    #print (instance.disks[0].disk_size_gb)
+    #print("#################################################")
 
 class VM(Resource):
     
