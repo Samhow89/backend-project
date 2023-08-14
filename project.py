@@ -63,6 +63,8 @@ for instance in instances:
         'Status': instance.status,
         'OS': instance.disks[0].licenses[0].split('/')[-1]
         }
+    
+
 
 class VM(Resource):
     
