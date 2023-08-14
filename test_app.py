@@ -4,6 +4,7 @@ from base64 import b64encode
 
 
 class TestApp(unittest.TestCase):
+
     def setUp(self):
         self.app = app.test_client()
 
@@ -12,6 +13,11 @@ class TestApp(unittest.TestCase):
             'Authorization': 'Basic ' + b64encode(b"admin:password123").decode('utf-8')
         })
         self.assertEqual(response.status_code, 200)
+
+    def test_unauthorized_access(self):
+        response = self.app.get('/')
+        self.assertEqual(response.status_code, 401)
+
 
 if __name__ == '__main__':
     unittest.main()
