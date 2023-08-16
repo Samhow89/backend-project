@@ -7,16 +7,30 @@ import bcrypt
 import time
 from google.cloud import monitoring_v3
 from datetime import datetime
+import json
 
 
 
 project_id = 'project-389915'
 zone = 'europe-west2-c'
 
-#Login details to access the api
-USERNAME = "admin"
-# Hashed password for "password123"
-PASSWORD = "$2b$12$lyR1usJNQWDo6ciYe/NBoO8co2urbyK4OHK7jhlVNqRPyCM9v5cyW"
+with open("credentials.json", "r") as file:
+    credentials = json.load(file)
+
+
+print ("ACCOUNT CREATOR")
+
+credentials["username"] = input("Please enter a username: ")
+credentials["password"] = bcrypt.hashpw(input("Please enter a password: ").encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+with open("credentials.json", "w") as file:
+    json.dump(credentials, file, indent=4)
+
+print ("Thanks. Starting API...")
+
+
+USERNAME = credentials["username"]
+PASSWORD = credentials["password"]
 
 
 compute_client = compute_v1.InstancesClient()
@@ -29,6 +43,8 @@ app = Flask("GCPInstancesAPI")
 api = Api(app)
 CORS(app)
 auth = HTTPBasicAuth()
+
+
 
 
 @auth.verify_password
